@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Блог</title>
+    <!-- Вставьте здесь свой CSS -->
+</head>
+
+<body>
+    <h1>Блог</h1>
+    <form id="post-form">
+        <input type="text" id="title" placeholder="Заголовок">
+        <textarea id="content" placeholder="Содержание"></textarea>
+        <button type="submit">Создать пост</button>
+    </form>
+    <div id="posts"></div>
+
+    <script>
+        document.getElementById('post-form').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const title = document.getElementById('title').value;
+            const content = document.getElementById('content').value;
+
+            fetch('http://localhost:3000/api/blogs', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ title: title, content: content })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data);
+                    loadPosts(); // Обновление списка постов после создания нового
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                });
+        });
+
+        function loadPosts() {
+            fetch('http://localhost:3000/api/blogs')
+                .then(response => response.json())
+                .then(posts => {
+                    const postsContainer = document.getElementById('posts');
+                    postsContainer.innerHTML = ''; // Очищаем текущий список
+                    posts.forEach(post => {
+                        const postElement = document.createElement('div');
+                        postElement.innerHTML = `
+                        <h3>${post.title}</h3>
+                        <p>${post.content}</p>
+                        <button onclick="updatePost('${post._id}')">Обновить</button>
+                        <button onclick="deletePost('${post._id}')">Удалить</button>
+                    `;
+                        postsContainer.appendChild(postElement);
+                    });
+                });
+        }
+
+        function updatePost(id) {
+            const title = prompt("Введите новый заголовок:");
+            const content = prompt("Введите новое содержание:");
+            fetch(`http://localhost:3000/api/blogs/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ title: title, content: content })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data);
+                    loadPosts(); // Обновление списка постов после обновления
+                });
+        }
+
+        function deletePost(id) {
+            fetch(`http://localhost:3000/api/blogs/${id}`, {
+                method: 'DELETE'
+            })
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data);
+                    loadPosts(); // Обновление списка постов после удаления
+                });
+        }
+
+        loadPosts(); // Загрузка всех постов при инициализации
+    </script>
+</body>
+
+</html>
